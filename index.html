@@ -86,6 +86,53 @@ function arcTween(outerRadius, delay) {
       return function(t) { d.outerRadius = i(t); return arc(d); };
     });
   };
+
+svg.selectAll("text").data(piedata)
+    .enter()
+    .append("text")
+    .attr("text-anchor", "middle")
+    .attr("x", function(d) {
+        var a = d.startAngle + (d.endAngle - d.startAngle)/2 - Math.PI/2;
+        d.cx = Math.cos(a) * (radius - 75);
+        return d.x = Math.cos(a) * (radius - 20);
+    })
+    .attr("y", function(d) {
+        var a = d.startAngle + (d.endAngle - d.startAngle)/2 - Math.PI/2;
+        d.cy = Math.sin(a) * (radius - 75);
+        return d.y = Math.sin(a) * (radius - 20);
+    })
+    .text(function(d) { return d.value; })
+    .each(function(d) {
+        var bbox = this.getBBox();
+        d.sx = d.x - bbox.width/2 - 2;
+        d.ox = d.x + bbox.width/2 + 2;
+        d.sy = d.oy = d.y + 5;
+    });
+
+svg.append("defs").append("marker")
+    .attr("id", "circ")
+    .attr("markerWidth", 6)
+    .attr("markerHeight", 6)
+    .attr("refX", 3)
+    .attr("refY", 3)
+    .append("circle")
+    .attr("cx", 3)
+    .attr("cy", 3)
+    .attr("r", 3);
+
+svg.selectAll("path.pointer").data(piedata).enter()
+    .append("path")
+    .attr("class", "pointer")
+    .style("fill", "none")
+    .style("stroke", "black")
+    .attr("marker-end", "url(#circ)")
+    .attr("d", function(d) {
+        if(d.cx > d.ox) {
+            return "M" + d.sx + "," + d.sy + "L" + d.ox + "," + d.oy + " " + d.cx + "," + d.cy;
+        } else {
+            return "M" + d.ox + "," + d.oy + "L" + d.sx + "," + d.sy + " " + d.cx + "," + d.cy;
+        };
+
 }
 
 </script>
