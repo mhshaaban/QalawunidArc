@@ -21,7 +21,14 @@ font-weight: 300;
 letter-spacing: -2px;
 margin: .3em 0 .1em 0;
 }
-    
+
+.arc text {
+  font: 10px sans-serif;
+  text-anchor: middle;
+}
+
+.arc path {
+  stroke: #fff;
 }
     
 </style>
@@ -32,61 +39,51 @@ margin: .3em 0 .1em 0;
 
 </header>
 
-<script src="//d3js.org/d3.v4.0.0-alpha.4.min.js"></script>
+<script src="//d3js.org/d3.v3.min.js"></script>
 <script>
-var canvas = document.querySelector("canvas"),
-    context = canvas.getContext("2d");
 
-var width = canvas.width,
-    height = canvas.height,
+var width = 960,
+    height = 500,
     radius = Math.min(width, height) / 2;
 
-var colors = ["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"];
+var color = d3.scale.ordinal()
+    .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
 
-var arc = d3.arc()
+var arc = d3.svg.arc()
     .outerRadius(radius - 10)
-    .innerRadius(radius - 70)
-    .context(context);
+    .innerRadius(radius - 70);
 
-var labelArc = d3.arc()
-    .outerRadius(radius - 40)
-    .innerRadius(radius - 40)
-    .context(context);
-
-var pie = d3.pie()
+var pie = d3.layout.pie()
     .sort(null)
     .value(function(d) { return d.population; });
 
-context.translate(width / 2, height / 2);
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+  .append("g")
+    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-d3.requestTsv("data.tsv", function(d) {
-  d.reign = +d.reign;
-  return d;
-}, function(error, data) {
+d3.csv("data.csv", type, function(error, data) {
   if (error) throw error;
 
-  var arcs = pie(data);
+  var g = svg.selectAll(".arc")
+      .data(pie(data))
+    .enter().append("g")
+      .attr("class", "arc");
 
-  arcs.forEach(function(d, i) {
-    context.beginPath();
-    arc(d);
-    context.fillStyle = colors[i];
-    context.fill();
-  });
+  g.append("path")
+      .attr("d", arc)
+      .style("fill", function(d) { return color(d.data.age); });
 
-  context.beginPath();
-  arcs.forEach(arc);
-  context.strokeStyle = "#fff";
-  context.stroke();
-
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-  context.fillStyle = "#000";
-  arcs.forEach(function(d) {
-    var c = labelArc.centroid(d);
-    context.fillText(d.data.age, c[0], c[1]);
-  });
+  g.append("text")
+      .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
+      .attr("dy", ".35em")
+      .text(function(d) { return d.data.age; });
 });
 
+function type(d) {
+  d.population = +d.population;
+  return d;
+}
+
 </script>
-<footer>Citation: xxx</footer>
